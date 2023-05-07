@@ -1,45 +1,50 @@
 const fs = require('fs');
-const path = require('path');
 const readline = require('readline');
 
-const filePath = path.join(__dirname, '02-write-file', 'text.txt');
+const filePath = './02-write-file/output.txt';
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
+fs.access('./02-write-file', (err) => {
+  if (err) {
+    fs.mkdir('./02-write-file', (err) => {
+      if (err) {
+        console.error(`Ошибка при создании папки: ${err.message}`);
+        process.exit(1);
+      }
+      start();
+    });
+  } else {
+    start();
+  }
 });
 
-rl.setPrompt('Введите текст (или "exit" для завершения): ');
+function start() {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
 
-fs.open(filePath, 'a+', (err, fd) => {
-  if (err) {
-    console.error(err);
-    process.exit(1);
-  }
-
+  rl.setPrompt('Введите текст (для выхода наберите exit): ');
   rl.prompt();
 
   rl.on('line', (input) => {
     if (input === 'exit') {
-      console.log('Прощайте!');
+      console.log('Выход');
       rl.close();
       process.exit(0);
     }
-
-    fs.appendFile(fd, input + '\n', (err) => {
+    fs.appendFile(filePath, input + '\n', (err) => {
       if (err) {
-        console.error(err);
+        console.error(`Ошибка при записи в файл: ${err.message}`);
+        rl.close();
         process.exit(1);
       }
-
-      console.log(`"${input}" был записан в файл.`);
+      console.log(`Текст "${input}" добавлен в файл ${filePath}`);
       rl.prompt();
     });
   });
 
-  rl.on('SIGINT', () => {
-    console.log('Прощайте!');
-    rl.close();
+  rl.on('close', () => {
+    console.log('Выход');
     process.exit(0);
   });
-});
+}
